@@ -25,7 +25,7 @@ terraform init
 terraform apply
 ```
 
-outputに`hello_url`が出るので、これをcurlなりブラウザなりで呼ぶ。
+outputに `hello_url` が出るので、これをcurlなりブラウザなりで呼ぶ。
 
 
 # TIPS: integration_http_method
