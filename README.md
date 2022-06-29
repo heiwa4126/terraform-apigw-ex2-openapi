@@ -13,7 +13,7 @@ requirements.txtをサポートする。
 
 - Terraform 1.2以上
 - Python 3.9と3.9のpip (バージョンはvariableで変更可能)
-- Python 3.9が `python3.9` で実行できること。
+- Python 3.9が `$ python3.9` で実行できること。
 
 
 # デプロイ
