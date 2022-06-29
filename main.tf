@@ -1,5 +1,5 @@
 variable "prefix" {
-  default = "apigw-ex1-"
+  default = "apigw-ex2-"
 }
 variable "aws_region" {
   default = "ap-northeast-3"
@@ -97,41 +97,27 @@ data "aws_iam_policy_document" "lambda_default" {
   }
 }
 
+data "template_file" "api" {
+  template = file("./hello_api.yml")
+  vars = {
+    title              = "${local.prefix}apigw1"
+    aws_region_name    = var.aws_region
+    stage_name         = var.stage_name
+    hello_function_arn = aws_lambda_function.hello.arn
+  }
+}
+
 resource "aws_api_gateway_rest_api" "default" {
+  body = data.template_file.api.rendered
   name = "${local.prefix}apigw1"
 }
 
-resource "aws_api_gateway_resource" "hello" {
-  rest_api_id = aws_api_gateway_rest_api.default.id
-  parent_id   = aws_api_gateway_rest_api.default.root_resource_id
-  path_part   = "hello"
-}
-
-resource "aws_api_gateway_method" "hello" {
-  rest_api_id   = aws_api_gateway_rest_api.default.id
-  resource_id   = aws_api_gateway_resource.hello.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "hello" {
-  rest_api_id = aws_api_gateway_method.hello.rest_api_id
-  resource_id = aws_api_gateway_method.hello.resource_id
-  http_method = aws_api_gateway_method.hello.http_method
-  uri         = aws_lambda_function.hello.invoke_arn
-
-  type                    = "AWS_PROXY"
-  integration_http_method = "POST" # これ重要
-}
-
 resource "aws_api_gateway_deployment" "default" {
-  depends_on = [
-    aws_api_gateway_integration.hello,
-  ]
-
   rest_api_id = aws_api_gateway_rest_api.default.id
   stage_name  = var.stage_name
-
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.default.body))
+  }
   lifecycle {
     create_before_destroy = true
   }
@@ -142,11 +128,12 @@ resource "aws_lambda_permission" "hello" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   function_name = aws_lambda_function.hello.function_name
-  # loose
-  source_arn = "${aws_api_gateway_rest_api.default.execution_arn}/*/*"
-  # strict: source_arn = "${aws_api_gateway_rest_api.default.execution_arn}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.proxy.path}"
+  source_arn    = "${aws_api_gateway_rest_api.default.execution_arn}/*/*"
 }
 
 output "hello_url" {
   value = "${aws_api_gateway_deployment.default.invoke_url}/hello"
+}
+output "api_body" {
+  value = aws_api_gateway_rest_api.default.body
 }

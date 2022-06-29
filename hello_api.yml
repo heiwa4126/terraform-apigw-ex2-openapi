@@ -1,0 +1,39 @@
+openapi: 3.0.1
+info:
+  title: ${title}
+  description: Created by Terraform
+  version: 1.0.0
+servers:
+- url: /${stage_name}
+paths:
+  /hello:
+    get:
+      responses:
+        '200':
+          description: 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/hello'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${aws_region_name}:lambda:path/2015-03-31/functions/${hello_function_arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST        # 絶対POST
+        type: aws_proxy
+
+components:
+  schemas:
+    hello:
+      title: hello
+      type: object
+      properties:
+        message:
+          type: string
+          example: hello
+        location:
+          type: string
+          example: 127.0.0.1
+
+x-amazon-apigateway-request-validators:
+    validateRequestParameters: true
+    validateRequestBody: true
