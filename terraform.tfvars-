@@ -1,0 +1,7 @@
+author_mail           = "foo@example.com"
+aws_region            = "ap-northeast-3"
+lambda_name           = "hello"
+log_retention_in_days = 7
+prefix                = "apigw-ex1-"
+python                = "python3.9"
+stage_name            = "dev"
