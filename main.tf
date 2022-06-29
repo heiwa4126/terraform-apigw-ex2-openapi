@@ -53,7 +53,7 @@ resource "aws_iam_role" "hello" {
 }
 
 resource "aws_cloudwatch_log_group" "hello" {
-  name              = "/aws/lambda/${var.lambda_name}"
+  name              = "/aws/lambda/${aws_lambda_function.hello.function_name}"
   retention_in_days = var.log_retention_in_days
 }
 
