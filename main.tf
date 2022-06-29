@@ -20,7 +20,7 @@ variable "log_retention_in_days" {
   default = 7
 }
 locals {
-  prefix = var.prefix  # just as macro
+  prefix = var.prefix # just as macro
 }
 
 terraform {
@@ -57,7 +57,19 @@ resource "aws_cloudwatch_log_group" "hello" {
   retention_in_days = var.log_retention_in_days
 }
 
+resource "null_resource" "hello" {
+  provisioner "local-exec" {
+    command = "${var.python} -m pip install -U -r ./src/${var.lambda_name}/requirements.txt -t ./src/${var.lambda_name}/"
+  }
+  triggers = {
+    dependencies_versions = filemd5("./src/${var.lambda_name}/requirements.txt")
+    source_versions       = filemd5("./src/${var.lambda_name}/app.py")
+  }
+}
+
 data "archive_file" "hello" {
+  depends_on  = [null_resource.hello]
+  excludes    = ["__pycache__", "venv"]
   type        = "zip"
   source_dir  = "./src/${var.lambda_name}"
   output_path = "./tmp/${var.lambda_name}.zip"
